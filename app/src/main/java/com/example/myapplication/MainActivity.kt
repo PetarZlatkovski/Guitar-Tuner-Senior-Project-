@@ -1,45 +1,74 @@
 package com.example.myapplication
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import android.graphics.Color
-import android.util.TypedValue
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-
+import android.widget.Button
+import android.widget.LinearLayout
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var noteTextView : TextView
+    var hertz : Int = 392
+    private val handler = Handler(Looper.getMainLooper())
+    private var currentIndex = 0
+
+    // Test frequencies and corresponding notes
+    private val testFrequencies = listOf(440, 392, 329, 440, 392, 329)
+    private val testNotes = listOf("A", "G", "E", "A", "G", "E")
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        setContentView(R.layout.activity_main)
 
-        val textView = TextView(this)
+        noteTextView = findViewById(R.id.noteLetter)
 
-        textView.layoutParams= LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+        // Method 1: Change text with a button click
+        val testButton = Button(this)
+        testButton.text = "Test Change Note"
+        testButton.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
-        textView.text = "A"
-        textView.text = "GeeksforGeeks"
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 32f)
-        // onClick the text a message will be displayed "HELLO GEEK"
-        textView.setOnClickListener() {
-            Toast.makeText(this@MainActivity, "HELLO GEEK",
-                Toast.LENGTH_LONG).show()
+        // Add button to the layout
+        val mainLayout = findViewById<LinearLayout>(R.id.main)
+        mainLayout.addView(testButton)
+
+        testButton.setOnClickListener {
+            changeNoteBasedOnHertz()
         }
 
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+    }
+
+    private fun changeNoteBasedOnHertz() {
+        when (hertz) {
+            440 -> {
+                noteTextView.text = "A"
+                hertz = 392  // Change to next test value
+            }
+            392 -> {
+                noteTextView.text = "G"
+                hertz = 329
+            }
+            329 -> {
+                noteTextView.text = "E"
+                hertz = 440
+            }
         }
     }
 
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        handler.removeCallbacksAndMessages(null)
+    }
 }
