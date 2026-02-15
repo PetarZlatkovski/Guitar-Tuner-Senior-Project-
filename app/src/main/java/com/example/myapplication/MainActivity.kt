@@ -15,11 +15,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var noteTextView : TextView
     var hertz : Int = 392
     private val handler = Handler(Looper.getMainLooper())
-    private var currentIndex = 0
-
-    // Test frequencies and corresponding notes
-    private val testFrequencies = listOf(440, 392, 329, 440, 392, 329)
-    private val testNotes = listOf("A", "G", "E", "A", "G", "E")
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
