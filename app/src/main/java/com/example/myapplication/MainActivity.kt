@@ -9,12 +9,21 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.TextView
 import android.widget.Button
 import android.widget.LinearLayout
+import android.media.AudioRecord
+import android.media.AudioFormat
+import android.media.MediaRecorder
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var noteTextView : TextView
     var hertz : Int = 392
     private val handler = Handler(Looper.getMainLooper())
+    val bufferSize = AudioRecord.getMinBufferSize(
+        44100,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT
+    )
+
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
