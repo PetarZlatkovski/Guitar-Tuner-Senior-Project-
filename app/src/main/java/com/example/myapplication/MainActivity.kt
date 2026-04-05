@@ -10,6 +10,8 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import kotlin.math.ln
+import kotlin.math.roundToInt
 
 
 class MainActivity : AppCompatActivity() {
@@ -24,7 +26,8 @@ class MainActivity : AppCompatActivity() {
     private var audioRecord: AudioRecord? = null
     private var isRecording = false
     private var recordingThread: Thread? = null
-    private val detector = PitchDetector(44100, 4096)  // ADD
+    private val detector = PitchDetector(44100, 4096)
+    private val kalman = KalmanFilter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,9 +83,24 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         val result = detector.process(fftBuffer)
-                        if (result != null) {
-                            Log.d(TAG, "Note: ${result.note}  Cents: ${"%.1f".format(result.cents)}  Hz: ${"%.2f".format(result.frequency)}")
-                            runOnUiThread { findViewById<TextView>(R.id.noteLetter).text = result.note }
+                        if (result == null) {
+                            kalman.reset()
+                            runOnUiThread { findViewById<TextView>(R.id.noteLetter).text = "--" }
+                        } else {
+                            val smoothedHz   = kalman.update(result.frequency)
+                            // Re-derive note name from smoothed frequency
+                            val midi         = 12.0 * ln(smoothedHz / 440.0) / ln(2.0) + 69.0
+                            val nearestMidi  = midi.roundToInt().coerceIn(0, 127)
+                            val noteNames    = arrayOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
+                            val smoothedNote = noteNames[nearestMidi % 12] + ((nearestMidi / 12) - 1)
+                            val smoothedCents = ((midi - nearestMidi) * 100.0).toFloat()
+
+                            Log.d(TAG, "Note: $smoothedNote  Cents: ${"%.1f".format(smoothedCents)}  " +
+                                    "Hz: ${"%.2f".format(smoothedHz)}  Confidence: ${result.confidence}")
+
+                            runOnUiThread {
+                                findViewById<TextView>(R.id.noteLetter).text = smoothedNote
+                            }
                         }
                     }
                 }

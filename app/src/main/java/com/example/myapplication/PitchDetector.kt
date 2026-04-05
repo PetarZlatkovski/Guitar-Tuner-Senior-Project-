@@ -8,7 +8,8 @@ import kotlin.math.sqrt
 data class TunerResult(
     val note: String,
     val cents: Float,
-    val frequency: Double
+    val frequency: Double,
+    val confidence: String
 )
 
 class PitchDetector(
@@ -16,6 +17,7 @@ class PitchDetector(
     private val fftSize: Int = 4096
 ) {
     private val fft = FftLogic(fftSize)
+    private val yin = YinDetector(sampleRate, fftSize)
     private val freqResolution = sampleRate.toDouble() / fftSize
 
     private val minBin = (80.0  / freqResolution).toInt()
@@ -24,6 +26,7 @@ class PitchDetector(
     private val NOTE_NAMES = arrayOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
     private val SILENCE_THRESHOLD = 0.008f
 
+    private val AGREEMENT_WINDOW_HZ = 15.0
     fun process(buffer: ShortArray): TunerResult? {
         fft.compute(buffer)
 
@@ -53,19 +56,29 @@ class PitchDetector(
         val denom  = alpha - 2f * beta + gamma
         // If denom is ~0 the peak is flat — skip interpolation rather than produce NaN
         val offset = if (abs(denom) < 1e-10f) 0.0 else 0.5 * (alpha - gamma) / denom
-        val refinedFreq = (peakBin + offset) * freqResolution
+        val fftFreq = (peakBin + offset) * freqResolution
 
         // Guard: NaN or non-positive freq would crash Math.log
-        if (refinedFreq.isNaN() || refinedFreq <= 0.0) return null
+        if (fftFreq.isNaN() || fftFreq <= 0.0) return null
 
-        return frequencyToResult(refinedFreq)
+        //YIN algorithm
+        val yinFreq = yin.detect(buffer)
+
+        val (finalFreq, confidence) = if (yinFreq != null &&
+            abs(fftFreq - yinFreq) <AGREEMENT_WINDOW_HZ) {
+            Pair((fftFreq + yinFreq) / 2.0, "HIGH")
+        } else{
+            Pair(fftFreq, "LOW")
+        }
+
+        return frequencyToResult(finalFreq, confidence)
     }
 
-    private fun frequencyToResult(freq: Double): TunerResult {
+    private fun frequencyToResult(freq: Double, confidence: String): TunerResult {
         val midi        = 12.0 * ln(freq / 440.0) / ln(2.0) + 69.0
         val nearestMidi = midi.roundToInt().coerceIn(0, 127)
         val cents       = ((midi - nearestMidi) * 100.0).toFloat()
         val noteName    = NOTE_NAMES[nearestMidi % 12] + ((nearestMidi / 12) - 1)
-        return TunerResult(note = noteName, cents = cents, frequency = freq)
+        return TunerResult(note = noteName, cents = cents, frequency = freq, confidence = confidence)
     }
 }
