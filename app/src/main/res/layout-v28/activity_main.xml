@@ -1,26 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp"
     tools:context=".MainActivity">
 
+    <!-- Tuning meter arc -->
+    <com.example.myapplication.TuningMeterView
+        android:id="@+id/tuningMeter"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="40dp" />
 
+    <!-- Detected note name -->
     <TextView
         android:id="@+id/noteLetter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="50dp"
-        android:textFontWeight="200"
-        android:text="@string/a"
+        android:layout_marginTop="24dp"
+        android:text="@string/placeholder_note"
+        android:textSize="72sp"
+        android:textStyle="bold"
+        android:textAlignment="center" />
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <!-- Cents deviation label -->
+    <TextView
+        android:id="@+id/centsLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/placeholder_cents"
+        android:textSize="20sp"
+        android:textAlignment="center" />
+
+    <!-- Frequency label -->
+    <TextView
+        android:id="@+id/freqLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/placeholder_hz"
+        android:textSize="16sp"
+        android:textAlignment="center" />
 
 </LinearLayout>

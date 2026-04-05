@@ -13,7 +13,7 @@ data class TunerResult(
 )
 
 class PitchDetector(
-    private val sampleRate: Int = 44100,
+    sampleRate: Int = 44100,
     private val fftSize: Int = 4096
 ) {
     private val fft = FftLogic(fftSize)
@@ -23,10 +23,10 @@ class PitchDetector(
     private val minBin = (80.0  / freqResolution).toInt()
     private val maxBin = (1100.0 / freqResolution).toInt().coerceAtMost(fftSize / 2 - 2)
 
-    private val NOTE_NAMES = arrayOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
-    private val SILENCE_THRESHOLD = 0.008f
+    private val noteNames = arrayOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
+    private val silenceThreshold = 0.008f
 
-    private val AGREEMENT_WINDOW_HZ = 15.0
+    private val agreementWindowHz = 15.0
     fun process(buffer: ShortArray): TunerResult? {
         fft.compute(buffer)
 
@@ -47,7 +47,7 @@ class PitchDetector(
             if (hps[i] > hps[peakBin]) peakBin = i
         }
 
-        if (magnitudes[peakBin] < SILENCE_THRESHOLD) return null
+        if (magnitudes[peakBin] < silenceThreshold) return null
 
         // Parabolic interpolation
         val alpha  = magnitudes[peakBin - 1]
@@ -65,7 +65,7 @@ class PitchDetector(
         val yinFreq = yin.detect(buffer)
 
         val (finalFreq, confidence) = if (yinFreq != null &&
-            abs(fftFreq - yinFreq) <AGREEMENT_WINDOW_HZ) {
+            abs(fftFreq - yinFreq) <agreementWindowHz) {
             Pair((fftFreq + yinFreq) / 2.0, "HIGH")
         } else{
             Pair(fftFreq, "LOW")
@@ -78,7 +78,7 @@ class PitchDetector(
         val midi        = 12.0 * ln(freq / 440.0) / ln(2.0) + 69.0
         val nearestMidi = midi.roundToInt().coerceIn(0, 127)
         val cents       = ((midi - nearestMidi) * 100.0).toFloat()
-        val noteName    = NOTE_NAMES[nearestMidi % 12] + ((nearestMidi / 12) - 1)
+        val noteName    = noteNames[nearestMidi % 12] + ((nearestMidi / 12) - 1)
         return TunerResult(note = noteName, cents = cents, frequency = freq, confidence = confidence)
     }
 }

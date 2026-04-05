@@ -1,8 +1,8 @@
 package com.example.myapplication
 
 class KalmanFilter(
-    private val processNoise: Double = 0.5,
-    private val measurementNoise: Double = 8.0
+    private val processNoise: Double = 0.1,
+    private val measurementNoise: Double = 25.0
 ) {
     private var estimate = 0.0
     private var errorCovariance = 1.0

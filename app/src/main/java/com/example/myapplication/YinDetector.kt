@@ -30,13 +30,13 @@ class YinDetector (
     private fun computeDifferenceFunction(buffer: ShortArray) {
         for (tau in 0 until yinBufferSize) {
             var sum = 0.0
-            for (j in 0 until yinBufferSize) {
+            for (j in 0 until (buffer.size - tau)) {
                 val delta = buffer[j].toDouble() - buffer[j + tau].toDouble()
                 sum += delta * delta
             }
             yinBuffer[tau] = sum
-            }
         }
+    }
 
     private fun computeCumulativeMeanNormalized() {
         yinBuffer[0] = 1.0
