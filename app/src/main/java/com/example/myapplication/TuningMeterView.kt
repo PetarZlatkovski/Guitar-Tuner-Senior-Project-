@@ -74,21 +74,21 @@ class TuningMeterView @JvmOverloads constructor(
         val cy = h * 0.9f
         val radius = (w * 0.38f).coerceAtMost(cy * 0.95f)
 
-        // Arc bounding box
+
         arcRect.set(cx - radius, cy - radius, cx + radius, cy + radius)
         canvas.drawArc(arcRect, arcStartAngle, arcSweepAngle, false, arcPaint)
 
-        // Tick marks at -50, -25, 0, +25, +50 cents
+
         drawTicks(canvas, cx, cy, radius)
 
-        // Labels
+
         canvas.drawText("♭", cx - radius * 0.85f, cy + 36f, labelPaint)
         canvas.drawText("♯", cx + radius * 0.85f, cy + 36f, labelPaint)
 
-        // Centre dot (pivot point)
+
         canvas.drawCircle(cx, cy, 10f, centreDotPaint)
 
-        // Needle
+
         val needleAngle = centsToAngle(cents)
         val needleLength = radius * 0.88f
         val radians = Math.toRadians(needleAngle.toDouble())
@@ -109,7 +109,7 @@ class TuningMeterView @JvmOverloads constructor(
     }
 
     private fun drawTicks(canvas: Canvas, cx: Float, cy: Float, radius: Float) {
-        // Five ticks: -50, -25, 0, +25, +50 cents
+
         val tickCents = floatArrayOf(-50f, -25f, 0f, 25f, 50f)
         for (c in tickCents) {
             val angle   = Math.toRadians(centsToAngle(c).toDouble())

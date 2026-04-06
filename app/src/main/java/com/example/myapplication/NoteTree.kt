@@ -33,7 +33,7 @@ class NoteTree {
             note.frequency > node.note.frequency -> {
                 node.right = insertRec(node.right, note); node }
 
-            else -> node   // duplicate frequency — ignore
+            else -> node
         }
     }
 

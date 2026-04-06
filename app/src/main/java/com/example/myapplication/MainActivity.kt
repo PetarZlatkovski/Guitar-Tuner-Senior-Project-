@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                             if (noteHistory.size > historySize) noteHistory.removeFirst()
                         }
 
-// Show the note only if it's the majority across recent frames
+
                         val majorityNote = noteHistory
                             .groupingBy { it }
                             .eachCount()

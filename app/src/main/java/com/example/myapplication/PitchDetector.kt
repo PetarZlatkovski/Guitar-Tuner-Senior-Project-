@@ -49,19 +49,19 @@ class PitchDetector(
 
         if (magnitudes[peakBin] < silenceThreshold) return null
 
-        // Parabolic interpolation
+
         val alpha  = magnitudes[peakBin - 1]
         val beta   = magnitudes[peakBin]
         val gamma  = magnitudes[peakBin + 1]
         val denom  = alpha - 2f * beta + gamma
-        // If denom is ~0 the peak is flat — skip interpolation rather than produce NaN
+
         val offset = if (abs(denom) < 1e-10f) 0.0 else 0.5 * (alpha - gamma) / denom
         val fftFreq = (peakBin + offset) * freqResolution
 
-        // Guard: NaN or non-positive freq would crash Math.log
+
         if (fftFreq.isNaN() || fftFreq <= 0.0) return null
 
-        //YIN algorithm
+
         val yinFreq = yin.detect(buffer)
 
         val (finalFreq, confidence) = if (yinFreq != null &&
