@@ -108,9 +108,7 @@ class MainActivity : AppCompatActivity() {
                 while (isRecording) {
                     val readResult = audioRecord?.read(fftBuffer, 0, fftSize) ?: 0
 
-
                     if (readResult == fftSize) {
-
                         val maxAmp = fftBuffer.maxOfOrNull { kotlin.math.abs(it.toInt()) } ?: 0
                         if (maxAmp < 1500) {
                             runOnUiThread { findViewById<TextView>(R.id.noteLetter).text = "--" }
@@ -118,6 +116,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         val result = detector.process(fftBuffer)
+
                         if (result == null) {
                             kalman.reset()
                             noteHistory.clear()
@@ -128,33 +127,42 @@ class MainActivity : AppCompatActivity() {
                                 findViewById<TextView>(R.id.centsLabel).text = "-- cents"
                                 findViewById<TextView>(R.id.freqLabel).text  = "-- Hz"
                             }
-                        }
                         } else {
-                        if (result.confidence == "HIGH") {
-                            noteHistory.addLast(displayNote)
-                            if (noteHistory.size > historySize) noteHistory.removeFirst()
-                        }
+                            val smoothedHz    = kalman.update(result.frequency)
+                            val closestNote   = noteTree.findClosest(smoothedHz)
+                            val displayNote   = closestNote?.name ?: result.note
+                            val midi          = 12.0 * ln(smoothedHz / 440.0) / ln(2.0) + 69.0
+                            val nearestMidi   = midi.roundToInt().coerceIn(0, 127)
+                            val smoothedCents = ((midi - nearestMidi) * 100.0).toFloat()
 
+                            if (result.confidence == "HIGH") {
+                                noteHistory.addLast(displayNote)
+                                if (noteHistory.size > historySize) noteHistory.removeFirst()
+                            }
 
-                        val majorityNote = noteHistory
-                            .groupingBy { it }
-                            .eachCount()
-                            .maxByOrNull { it.value }
-                            ?.takeIf { it.value >= historySize / 2 }
-                            ?.key
+                            val majorityNote = noteHistory
+                                .groupingBy { it }
+                                .eachCount()
+                                .maxByOrNull { it.value }
+                                ?.takeIf { it.value >= historySize / 2 }
+                                ?.key
 
-                        if (majorityNote != null && majorityNote != lastDisplayedNote) {
-                            lastDisplayedNote = majorityNote
-                        }
+                            if (majorityNote != null && majorityNote != lastDisplayedNote) {
+                                lastDisplayedNote = majorityNote
+                            }
 
-                        runOnUiThread {
-                            tuningMeter.setCents(smoothedCents)
-                            findViewById<TextView>(R.id.noteLetter).text = lastDisplayedNote
-                            findViewById<TextView>(R.id.centsLabel).text = "${"%.1f".format(smoothedCents)} cents"
-                            findViewById<TextView>(R.id.freqLabel).text  = "${"%.1f".format(smoothedHz)} Hz"
-                        }
+                            Log.d(tag, "Note: $lastDisplayedNote  Cents: ${"%.1f".format(smoothedCents)}  " +
+                                    "Hz: ${"%.2f".format(smoothedHz)}  Confidence: ${result.confidence}")
+
+                            runOnUiThread {
+                                tuningMeter.setCents(smoothedCents)
+                                findViewById<TextView>(R.id.noteLetter).text = lastDisplayedNote
+                                findViewById<TextView>(R.id.centsLabel).text = "${"%.1f".format(smoothedCents)} cents"
+                                findViewById<TextView>(R.id.freqLabel).text  = "${"%.1f".format(smoothedHz)} Hz"
+                            }
                         }
                     }
+                }
 
             } catch (e: Exception) {
                 Log.e(tag, "Recording thread crashed: ${e.javaClass.simpleName} — ${e.message}", e)
